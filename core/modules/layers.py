@@ -208,8 +208,6 @@ class RNNModel(nn.Module):
         batch_size = inp.shape[0]
 
         all_zeros = self.encoder.getZeroState(batch_size)
-        #print "all_zeros = ", all_zeros
-        #print "hidden_size = ", self.hidden_size
         enc_hidden = all_zeros
         if self.rnn_type=="lstm":
             enc_hidden = all_zeros, all_zeros
@@ -254,12 +252,12 @@ class BiRNNModel(nn.Module):
         inp: batchsize * seqlength
         '''
 
-        batch_size = inp.data.shape[0]
+        batch_size = inp.shape[0]
+        all_zeros = self.encoder.getZeroState(batch_size)
         inp = inp.T # seqlen, batchsize
 
         # encoder
         encoder_outputs = []
-        all_zeros = self.getZeroState()
         enc_hidden = all_zeros
         if self.rnn_type=="lstm":
             enc_hidden = all_zeros, all_zeros
@@ -270,6 +268,8 @@ class BiRNNModel(nn.Module):
             enc_out, enc_hidden = self.encoder(batch_size, current_input, enc_out, enc_hidden)
             encoder_outputs.append(enc_out.squeeze(0)) # enc_out: 1,b,hidden_size. After squeeze: b,hidden_size
             all_current_input.append(current_input)
+        #encoder_outputs[0].data.shape: batchsize, hidden_size
+        #encoder_outputs len = seqlen
 
         #revcoder
         revcoder_outputs = []
@@ -285,9 +285,10 @@ class BiRNNModel(nn.Module):
         #combine
         combined_outputs = None
         if encoder_revcoder_comb=="cat":
-            combined_outputs = [torch.concat(x,y) for x,y in zip(encoder_outputs,revcoder_outputs)]
+            combined_outputs = [torch.cat([x,y], dim=1) for x,y in zip(encoder_outputs,revcoder_outputs)]
         else:
             print "Not suppoerted"
+        #combined_outputs[0].data.shape: batchsize, 2*hidden_size
 
         return combined_outputs, (enc_hidden, rev_hidden) # enc_hidden is last step output
 
