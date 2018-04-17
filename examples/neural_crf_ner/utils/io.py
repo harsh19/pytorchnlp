@@ -11,6 +11,7 @@ def getData(fname):
 	while i<m:
 		words = []
 		tags = []
+		all_vals = []
 		while i<m:
 			row = data[i]
 			if len(row.strip())==0:
@@ -25,8 +26,9 @@ def getData(fname):
 			tag = vals[3]
 			words.append(word)
 			tags.append(tag)
+			all_vals.append(vals)
 			i+=1
-		ret.append({'text':words, 'tags':tags} ) 
+		ret.append({'text':words, 'tags':tags, 'vals':all_vals} ) 
 		i+=1
 	return ret
 

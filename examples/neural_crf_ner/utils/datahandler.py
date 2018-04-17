@@ -28,6 +28,7 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 		self.data_splits['test'] = json.load( open(dump_dir+"test.json", "r") )
 		splits = self.data_splits.keys()
 		self.split_lens = {split:len(self.data_splits[split]) for split in splits}
+		self.tag_dct_reverse = {i:tag for tag,i in self.tag_dct.items()}
 		print "split_lens = ", self.split_lens
 		print "tag_dct = ", self.tag_dct
 
@@ -35,7 +36,8 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 	def trialMode(self):
 		# reduce train split, val split
 		# update data lens
-		pass
+		self.split_lens = {split:3 for split in self.split_lens} # reduce to 3 batches
+		print "split_lens = ", self.split_lens
 
 
 	### data info
@@ -49,6 +51,16 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 		return len(self.tag_dct)
 
 
+	### data utils
+	def getTagsFromIndices(self, prediction_indices):
+		'''
+		prediction_indices: is a list of precitions indices
+		ret: same dimensionalities. tags instead of indices
+		'''
+		return [self.tag_dct_reverse[tag] for tag in prediction_indices ]
+
+
+
 	## batch and trianing
 	def shuffleTrain(self):
 		'''
@@ -60,7 +72,7 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 		self.data_splits['train']= [ self.data_splits['train'][idx] for idx in indices ]
 
 
-	def getBatch(self, split, batch_size, i):
+	def getBatch(self, split, batch_size, i, get_all_vals=False):
 		'''
 		Returns i'th batch from split, considering batch_size
 		'''
@@ -83,6 +95,8 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 
 		train_x = np.array( train_x )
 		#print "train_x, train_y, mask = ", train_x, train_y, mask
+		if get_all_vals:
+			return train_x, train_y, mask, [vals['vals'] for vals in split_vals]
 		return train_x, train_y, mask
 
 

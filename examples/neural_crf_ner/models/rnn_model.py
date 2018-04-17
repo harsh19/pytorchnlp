@@ -22,15 +22,20 @@ import pytorchnlp
 
 class RNNTagger(nn.Module):
 
-    def __init__(self, params):
+    def __init__(self, params, model_type="rnn"):
         super(RNNTagger,self).__init__()
         self.params = params
-        self.rnn_model = RNNModel(vocab_size=params.vocab_size, emb_size=params.emb_size, hidden_size=params.hidden_size) #, rnn_type=params.rnn_type, share_embeddings=params.share_embeddings)
-        self.W = nn.Linear(params.hidden_size, params.vocab_size)
+        self.model_type = model_type
+        if model_type=="rnn":
+            self.rnn_model = RNNModel(vocab_size=params.vocab_size, emb_size=params.emb_size, hidden_size=params.hidden_size) #, rnn_type=params.rnn_type, share_embeddings=params.share_embeddings)
+            self.W = nn.Linear(params.hidden_size, params.tag_size)
+        elif model_type=="birnn":
+            self.rnn_model = BiRNNModel(vocab_size=params.vocab_size, emb_size=params.emb_size, hidden_size=params.hidden_size) #, rnn_type=params.rnn_type, share_embeddings=params.share_embeddings)
+            self.W = nn.Linear(2*params.hidden_size, params.tag_size)
         print "RNNTagger: ",self._modules.keys()
 
 
-    def forward(self, inp, gt_output, mask=None, loss_function=None, mode="train"):
+    def forward(self, inp, gt_output, mask=None, loss_function=None, mode="train", get_loss=True):
 
         # gt_output: batch_size, seqlen
 
@@ -39,13 +44,12 @@ class RNNTagger(nn.Module):
         batch_size = gt_output.shape[0]
         seq_length = gt_output.shape[1]
 
-        encoder_outputs, enc_hidden = self.rnn_model(inp, mode=mode)
-        # encoder_outputs: seqlen, batch_size, hidden_size
+        encoder_outputs, enc_hidden = self.rnn_model(inp, mode=mode) # encoder_outputs: seqlen, batch_size, hidden_size
 
         loss = 0.0
-        #mask = np.transpose(mask)
-        gt_output = np.transpose(gt_output)
-        # gt_output: seqlen, batch_size
+        predictions = [[] for i in range(batch_size)]
+        mask = np.transpose(mask)  # mask: seqlen, batch_size
+        gt_output = np.transpose(gt_output) # gt_output: seqlen, batch_size
 
         for step,(encoder_output_step,gt_output_step) in enumerate(zip(encoder_outputs, gt_output)):
             softmax_output = F.log_softmax(self.W(encoder_output_step))
@@ -54,9 +58,20 @@ class RNNTagger(nn.Module):
             #print "gt_output_step = ", gt_output_step
             #print "loss_function(softmax_output,gt_output_step) = ", loss_function(softmax_output,gt_output_step).data
             #print "manualCalculation(softmax_output,gt_output_step) = ", manualCalculation(softmax_output.data.cpu().numpy(),gt_output_step.data.cpu().numpy())
-            loss+=loss_function(softmax_output,gt_output_step)
+            if get_loss:
+                loss+=loss_function(softmax_output,gt_output_step)
+            if mode=="decode":
+                cur_step_predictions = softmax_output.data.cpu().numpy() # cur_step_predictions: batch, vocab
+                cur_step_predictions = np.argmax(cur_step_predictions, axis=1) # batch
+                #print "cur_step_predictions = ", cur_step_predictions
+                #print "mask[step] = ", mask[step]
+                for i,(cur_step_predictions_i,mask_step_i) in enumerate(zip(cur_step_predictions, mask[step])):
+                    if mask_step_i==1:
+                        predictions[i].append(cur_step_predictions_i)
 
-        return loss
+        if get_loss:
+            return loss, predictions
+        return predictions
 
 
 #######################################
