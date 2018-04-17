@@ -53,6 +53,7 @@ class RNNTagger(nn.Module):
 
         for step,(encoder_output_step,gt_output_step) in enumerate(zip(encoder_outputs, gt_output)):
             softmax_output = F.log_softmax(self.W(encoder_output_step))
+            softmax_output = softmax_output.view(batch_size,-1)
             gt_output_step = pytorchnlp.pytorch_utils.nn.getTorchVariable(gt_output_step, typ="long")
             #print "softmax_output = ", softmax_output
             #print "gt_output_step = ", gt_output_step

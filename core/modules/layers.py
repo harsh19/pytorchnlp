@@ -285,7 +285,7 @@ class BiRNNModel(nn.Module):
         #combine
         combined_outputs = None
         if encoder_revcoder_comb=="cat":
-            combined_outputs = [torch.cat([x,y], dim=1) for x,y in zip(encoder_outputs,revcoder_outputs)]
+            combined_outputs = [torch.cat([x.view(batch_size,-1),y.view(batch_size,-1)], dim=1) for x,y in zip(encoder_outputs,revcoder_outputs)]
         else:
             print "Not suppoerted"
         #combined_outputs[0].data.shape: batchsize, 2*hidden_size
