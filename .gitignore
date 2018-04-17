@@ -1,0 +1,7 @@
+*.pyc
+*.pickle
+*.obj
+*.txt
+*.json
+*.data
+
