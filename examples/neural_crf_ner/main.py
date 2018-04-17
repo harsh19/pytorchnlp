@@ -3,7 +3,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 # python
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.misc
 import random
