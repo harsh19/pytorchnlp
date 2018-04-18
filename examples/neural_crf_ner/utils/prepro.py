@@ -29,6 +29,8 @@ class Prepro():
 		ret = []
 		for row in dataset:
 			ret.extend(row['tags'])
+		ret.append('start_tag')
+		ret.append('stop_tag')
 		return set(ret)
 
 	def _splitData(self, data):

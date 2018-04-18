@@ -35,8 +35,11 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 
 	def trialMode(self):
 		# reduce train split, val split
+		for split in self.data_splits:
+			self.data_splits[split] = self.data_splits[split][:10]
 		# update data lens
-		self.split_lens = {split:3 for split in self.split_lens} # reduce to 3 batches
+		splits = self.data_splits.keys()
+		self.split_lens = {split:len(self.data_splits[split]) for split in splits}
 		print "split_lens = ", self.split_lens
 
 

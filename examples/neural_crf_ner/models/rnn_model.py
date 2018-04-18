@@ -35,7 +35,7 @@ class RNNTagger(nn.Module):
         print "RNNTagger: ",self._modules.keys()
 
 
-    def forward(self, inp, gt_output, mask=None, loss_function=None, mode="train", get_loss=True):
+    def forward(self, inp, gt_output, mask=None, loss_function=None, mode="train", get_loss=True, debug=False):
 
         # gt_output: batch_size, seqlen
 
@@ -70,9 +70,11 @@ class RNNTagger(nn.Module):
                     if mask_step_i==1:
                         predictions[i].append(cur_step_predictions_i)
 
-        if get_loss:
-            return loss, predictions
-        return predictions
+        if mode=="decode":
+            if get_loss:
+                return loss, predictions
+        if mode=="train":
+            return loss
 
 
 #######################################

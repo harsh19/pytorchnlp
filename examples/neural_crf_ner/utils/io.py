@@ -1,6 +1,5 @@
-import pytorchnlp.utils.prepro as pytorchnlp_prepro
-import pytorchnlp.utils.utils as pytorchnlp_utils
-
+#import pytorchnlp.utils.prepro as pytorchnlp_prepro
+#import pytorchnlp.utils.utils as pytorchnlp_utils
 
 
 def getData(fname):

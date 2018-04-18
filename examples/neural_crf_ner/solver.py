@@ -21,6 +21,7 @@ import numpy as np
 import utils.io
 import utils.utilities
 from models import rnn_model
+from models import birnn_crf_model
 import scores
 
 # lib
@@ -59,9 +60,12 @@ class Solver:
 	def createModel(self):
 
 		#---- create model
+		print ":---- create model", self.params.model_type
 		params = self.params
 		if params.model_type=="rnn" or params.model_type=="birnn":
 			self.model = rnn_model.RNNTagger(self.params, params.model_type)
+		else:
+			self.model = birnn_crf_model.BiRNNCRF(self.params, self.data_handler.tag_dct, params.model_type)
 		
 		# loss function
 		self.loss_function = nn.NLLLoss(ignore_index=-1,size_average=False )
@@ -99,25 +103,34 @@ class Solver:
 			num_batches = self.data_handler.getNumberOfBatches('train', self.params.batch_size)
 			for batch_idx in range(num_batches):
 				batch_x, batch_y, mask = self.data_handler.getBatch(split='train',batch_size=self.params.batch_size,i=batch_idx)
-				loss = self._trainBatch(batch_x, batch_y)
+				deb=False
+				if batch_idx==0:
+					deb=True
+				loss = self._trainBatch(batch_x, batch_y, deb=deb)
 				epoch_loss+=loss
 				mask_y_sum += np.sum(mask)
 				if batch_idx%self.params.print_batch_freq==0:
 					print "Mean train loss after ",batch_idx,"batches of",epoch," epochs ="+str(epoch_loss/mask_y_sum)
 
-			num_batches = self.data_handler.getNumberOfBatches('val', self.params.batch_size)
-			val_loss = 0.0
-			mask_y_sum = 0.0
-			for i in range(num_batches):
-				batch_x, batch_y, mask_y = self.data_handler.getBatch(split='val', batch_size=self.params.batch_size, i=i)
-				val_loss+= self._getLoss(batch_x, batch_y)
-				mask_y_sum += np.sum(mask_y)
-			print "Epoch val loss = "+str(val_loss)
-			print "Epoch val perplexity = "+str( np.exp(val_loss/mask_y_sum) )
+			if self.params.model_type in ["rnn","birnn"]:
+				num_batches = self.data_handler.getNumberOfBatches('val', self.params.batch_size)
+				val_loss = 0.0
+				mask_y_sum = 0.0
+				for i in range(num_batches):
+					batch_x, batch_y, mask_y = self.data_handler.getBatch(split='val', batch_size=self.params.batch_size, i=i)
+					val_loss+= self._getLoss(batch_x, batch_y)
+					mask_y_sum += np.sum(mask_y)
+				print "Epoch val loss = "+str(val_loss)
+				print "Epoch val perplexity = "+str( np.exp(val_loss/mask_y_sum) )
+			
+			# check validation accuracy
 			self._evaluateAccuracy('val', self.params.model_name+"_"+str(epoch))			
 
+			# save model
 			if epoch%self.params.save_epoch_freq==0:
 				self._saveModel(str(epoch))
+			
+			# shuffle training
 			self.data_handler.shuffleTrain()
 
 
@@ -136,23 +149,23 @@ class Solver:
 		torch.save(checkpoint, "./tmp/"+self.params.model_name+"_"+extra+".ckpt")
 		print "Saved Model"
 
-	def _trainBatch(self, batch_x, batch_y):
+	def _trainBatch(self, batch_x, batch_y, deb=False):
 		self.model.zero_grad()
 		self.optimizer.zero_grad()
 		#loss = self.model(batch_x, gt_output=batch_y, mode='train', loss_function=self.loss_function)
-		loss,_ = self.model(inp=batch_x, gt_output=batch_y, mode='train', loss_function=self.loss_function)
+		loss = self.model(inp=batch_x, gt_output=batch_y, mode='train', loss_function=self.loss_function, debug=deb)
 		#print "loss = ",loss
 		loss.backward()
 		self.optimizer.step()
 		return loss.data[0]
 
 	def _getLoss(self, batch_x, batch_y):
-		loss,_ = self.model(inp=batch_x, gt_output=batch_y, mode='train', loss_function=self.loss_function)
+		loss = self.model(inp=batch_x, gt_output=batch_y, mode='train', loss_function=self.loss_function)
 		return loss.data[0]
 	
 	def _decodeBatch(self, batch_x, batch_y=None, mask=None):
 		#print "batch_y = ",batch_y
-		_,outputs = self.model( inp=batch_x, gt_output=batch_y, mask=mask, mode='decode', loss_function=self.loss_function)
+		_,outputs = self.model( inp=batch_x, gt_output=batch_y, mask=mask, mode='decode', loss_function=self.loss_function, get_loss=True)
 		return outputs
 
 	def _decodeAll(self, split="val"): # 'val'

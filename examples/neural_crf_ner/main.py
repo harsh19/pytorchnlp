@@ -38,6 +38,8 @@ def parseArguments():
 
 	# prepro params
 	parser.add_argument('-min_frequency', dest='min_frequency', type=int, default=2)
+	parser.add_argument('-start_tag', dest='start_tag', default='start_tag')
+	parser.add_argument('-stop_tag', dest='stop_tag', default='stop_tag')
 
 	# rnn model params
 	parser.add_argument('-emb_size', dest='emb_size', type=int, default=32)
