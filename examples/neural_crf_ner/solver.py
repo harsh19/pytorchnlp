@@ -111,8 +111,9 @@ class Solver:
 				mask_y_sum += np.sum(mask)
 				if batch_idx%self.params.print_batch_freq==0:
 					print "Mean train loss after ",batch_idx,"batches of",epoch," epochs ="+str(epoch_loss/mask_y_sum)
+			print "Epoch", epoch, ": Mean train epoch loss ="+str(epoch_loss/mask_y_sum)
 
-			if self.params.model_type in ["rnn","birnn"]:
+			if True: #self.params.model_type in ["rnn","birnn"]:
 				num_batches = self.data_handler.getNumberOfBatches('val', self.params.batch_size)
 				val_loss = 0.0
 				mask_y_sum = 0.0
@@ -120,8 +121,8 @@ class Solver:
 					batch_x, batch_y, mask_y = self.data_handler.getBatch(split='val', batch_size=self.params.batch_size, i=i)
 					val_loss+= self._getLoss(batch_x, batch_y)
 					mask_y_sum += np.sum(mask_y)
-				print "Epoch val loss = "+str(val_loss)
-				print "Epoch val perplexity = "+str( np.exp(val_loss/mask_y_sum) )
+				print "Epoch", epoch, "Epoch val loss = "+str(val_loss)
+				print "Epoch", epoch, "Epoch val perplexity = "+str( np.exp(val_loss/mask_y_sum) )
 			
 			# check validation accuracy
 			self._evaluateAccuracy('val', self.params.model_name+"_"+str(epoch))			
@@ -190,7 +191,7 @@ class Solver:
 		for output,vals in zip(all_outputs,all_vals):
 			for val,out in zip(vals,output):
 				out_data.append(' '.join(val)+' '+out)
-			out_data.append(' ')
+			out_data.append('')
 		fname = 'tmp/'+fname+".predictions"
 		self._outputToFile(fname, out_data)
 		print "SCORES = ", scores.scores(fname)

@@ -56,10 +56,10 @@ class BiRNNCRF(nn.Module):
         gt_output = pytorchnlp.pytorch_utils.nn.getTorchVariable(gt_output, typ="long").view(-1) # batchsize*seqlen -> seqlen [since batchsize=1]
 
         if mode=="train":
-            loss, info = self.neural_crf.neg_log_likelihood(inp, gt_output, all_outputs)
-            fscore, z = info
+            loss, info = self.neural_crf.getNegativeLogLikelihood(inp, gt_output, all_outputs)
+            fscore, goldscore = info
             if debug:
-                print "fscore = ", fscore, "|| z=", z
+                print "fscore(z) = ", fscore, "|| goldscore =", goldscore
                 self.neural_crf.printTransitionParams()
             return loss
 

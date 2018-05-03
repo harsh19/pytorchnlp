@@ -1,0 +1,2 @@
+# (p2) [jharsh@compute-0-19 projects]$ cp ~/miniconda2/lib/python2.7/site-packages/pytorchnlp.pth /home/jharsh/miniconda2/envs/p2/lib/python2.7/site-packages/
+# ln -s ~/projects/pytorchnlp/ /home/jharsh/miniconda2/envs/p2/lib/python2.7/site-packages/

@@ -21,6 +21,12 @@ def getTorchVariable(vals, typ="float", volatile=False):
     return autograd.Variable(tensor, volatile=volatile)
 
 
+def getTorchVariableFromTensor(tensor, volatile=False):
+    if torch.cuda.is_available():
+        tensor=tensor.cuda()
+    return autograd.Variable(tensor, volatile=volatile)
+
+
 def toNumpy(var):
     return var.data.cpu().numpy()
 
