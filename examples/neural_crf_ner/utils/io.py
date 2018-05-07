@@ -2,7 +2,7 @@
 #import pytorchnlp.utils.utils as pytorchnlp_utils
 
 
-def getData(fname):
+def getData(fname, use_pos=False):
 	data = open(fname, "r").readlines()
 	m = len(data)
 	i = 0
@@ -23,6 +23,8 @@ def getData(fname):
 				continue
 			word = vals[0]
 			tag = vals[3]
+			if use_pos:
+				tag = vals[1]
 			words.append(word)
 			tags.append(tag)
 			all_vals.append(vals)
@@ -32,8 +34,8 @@ def getData(fname):
 	return ret
 
 
-def getNERData():
-	train_data = getData("data/data/train.data")
-	val_data = getData("data/data/dev.data")
+def getNERData(task):
+	train_data = getData("data/data/train.data", task=="pos")
+	val_data = getData("data/data/dev.data", task=="pos")
 	test_data = [] #getData("data/data/test_hid.data")
 	return train_data, val_data, test_data

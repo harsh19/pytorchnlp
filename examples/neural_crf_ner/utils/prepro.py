@@ -7,17 +7,18 @@ import io
 
 class Prepro():
 
-	def __init__(self, params=None):
+	def __init__(self, params=None, task=None):
 		self.lang = Lang('text', min_frequency=2)
+		self.task = task
 
 	###
-	def preproData(self):
+	def preproData(self ): # task: ner/pos
 		# _preproData
 		# _splitData
-		data = io.getNERData()
+		data = io.getNERData(task=self.task)
 		self._splitData(data)
 		self._preproData(self.data_splits['train'])
-		self._dumpPrepro()
+		self._dumpPrepro(task=self.task)
 
 
 	def _preproData(self, data):
@@ -45,12 +46,18 @@ class Prepro():
 		self.all_tags_indexer = {tag:i for i,tag in enumerate(all_tags)}
 
 
-	def _dumpPrepro(self, dump_dir="data/processed_data/"):
-		json.dump( self.data_splits['train'], open(dump_dir+"train.json", "w") )
-		json.dump( self.data_splits['val'], open(dump_dir+"val.json", "w") )
-		json.dump( self.data_splits['test'], open(dump_dir+"test.json", "w") )
-		pickle.dump( self.lang, open(dump_dir+"lang.pickle", "w") )
-		pickle.dump( self.all_tags_indexer, open(dump_dir+"all_tags_indexer.pickle", "w") )
+	def _dumpPrepro(self, dump_dir="data/processed_data/",task="ner"):
+		prefix=""
+		if task=="pos":
+			prefix="pos_"
+		#print "... dumping lang,indexer, splits..."
+		#print "train dump. = ",dump_dir+prefix+"train.json"
+		#print "self.data_splits['train']: ",len(self.data_splits['train'])
+		json.dump( self.data_splits['train'], open(dump_dir+prefix+"train.json", "w") )
+		json.dump( self.data_splits['val'], open(dump_dir+prefix+"val.json", "w") )
+		json.dump( self.data_splits['test'], open(dump_dir+prefix+"test.json", "w") )
+		pickle.dump( self.lang, open(dump_dir+prefix+"lang.pickle", "w") )
+		pickle.dump( self.all_tags_indexer, open(dump_dir+prefix+"all_tags_indexer.pickle", "w") )
 
 
 

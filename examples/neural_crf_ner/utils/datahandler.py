@@ -11,21 +11,26 @@ import json
 
 class DataHandlerSeqLabel(DataHandlerDefault):
 
-	def __init__(self):
+	def __init__(self,task):
 		self.lang = None #Lang('text', min_frequency=2)
 		self.data_splits = {}
 		self.tag_dct = None
 		self.split_lens = None
+		self.task = task
 		self.loadPreproData()
+
 
 
 	def loadPreproData(self, dump_dir="data/processed_data/"):
 		# 	load vocab etc.
-		self.lang = pickle.load(open(dump_dir+"lang.pickle","r"))
-		self.tag_dct = pickle.load(open(dump_dir+"all_tags_indexer.pickle","r"))
-		self.data_splits['train'] = json.load( open(dump_dir+"train.json", "r") )
-		self.data_splits['val'] = json.load( open(dump_dir+"val.json", "r") )
-		self.data_splits['test'] = json.load( open(dump_dir+"test.json", "r") )
+		prefix=""
+		if self.task=="pos":
+			prefix="pos_"
+		self.lang = pickle.load(open(dump_dir+prefix+"lang.pickle","r"))
+		self.tag_dct = pickle.load(open(dump_dir+prefix+"all_tags_indexer.pickle","r"))
+		self.data_splits['train'] = json.load( open(dump_dir+prefix+"train.json", "r") )
+		self.data_splits['val'] = json.load( open(dump_dir+prefix+"val.json", "r") )
+		self.data_splits['test'] = json.load( open(dump_dir+prefix+"test.json", "r") )
 		splits = self.data_splits.keys()
 		self.split_lens = {split:len(self.data_splits[split]) for split in splits}
 		self.tag_dct_reverse = {i:tag for tag,i in self.tag_dct.items()}
@@ -75,7 +80,7 @@ class DataHandlerSeqLabel(DataHandlerDefault):
 		self.data_splits['train']= [ self.data_splits['train'][idx] for idx in indices ]
 
 
-	def getBatch(self, split, batch_size, i, get_all_vals=False):
+	def getBatch(self, split, batch_size, i, get_all_vals=False, get_segments=False):
 		'''
 		Returns i'th batch from split, considering batch_size
 		'''

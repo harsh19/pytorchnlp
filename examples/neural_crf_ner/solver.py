@@ -42,19 +42,20 @@ class Solver:
 
 		#---- create data handler
 		print "Creating Data Handler object"
-		self.data_handler = DataHandler()
+		self.data_handler = DataHandler(params.task)
 		self.params.vocab_size = self.data_handler.getVocabSize()
 		self.params.tag_size = self.data_handler.getTagSetSize()
+		self.task = params.task
 		if params.debug:
 			self.data_handler.trialMode()
 
 
-	def preprocessAll(self, data):
-		self.data_handler.preproData(data)
+	#def preprocessAll(self, data):
+	#	self.data_handler.preproData(data)
 
 
-	def loadPrepro(self):
-		self.data_handler.loadPrepro()
+	#def loadPrepro(self):
+	#	self.data_handler.loadPrepro()
 
 
 	def createModel(self):
@@ -125,7 +126,7 @@ class Solver:
 				print "Epoch", epoch, "Epoch val perplexity = "+str( np.exp(val_loss/mask_y_sum) )
 			
 			# check validation accuracy
-			self._evaluateAccuracy('val', self.params.model_name+"_"+str(epoch))			
+			self._evaluateAccuracy('val', self.params.model_name+"_"+str(epoch), task=self.task)			
 
 			# save model
 			if epoch%self.params.save_epoch_freq==0:
@@ -182,16 +183,22 @@ class Solver:
 			all_vals.extend(batch_vals)
 		return all_outputs, all_gt, all_vals
 
-	def _evaluateAccuracy(self, split='val', fname="val"):
+	def _evaluateAccuracy(self, split='val', fname="val", task="ner"):
 		all_outputs, all_gt, all_vals = self._decodeAll(split=split)
 		all_outputs = map(self.data_handler.getTagsFromIndices, all_outputs)
 		#print "all_vals = ", all_vals
 		#print "all_outputs = ", all_outputs
 		out_data = []
-		for output,vals in zip(all_outputs,all_vals):
-			for val,out in zip(vals,output):
-				out_data.append(' '.join(val)+' '+out)
-			out_data.append('')
+		if task=="ner":
+			for output,vals in zip(all_outputs,all_vals):
+				for val,out in zip(vals,output):
+					out_data.append(' '.join(val)+' '+out)
+				out_data.append('')
+		else:# pos
+			for output,vals in zip(all_outputs,all_vals):
+				for val,out in zip(vals,output):
+					out_data.append(' '.join(val[0:2])+' '+out) 
+				out_data.append('')
 		fname = 'tmp/'+fname+".predictions"
 		self._outputToFile(fname, out_data)
 		print "SCORES = ", scores.scores(fname)

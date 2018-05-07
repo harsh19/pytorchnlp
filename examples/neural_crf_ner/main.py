@@ -28,6 +28,7 @@ def parseArguments():
 	# mode
 	parser.add_argument('-mode',dest='mode') # prepro, train, decode
 	parser.add_argument('--debug', dest='debug', action='store_true', default=False)
+	parser.add_argument('-task', dest='task', default='ner')
 
 	# model
 	parser.add_argument('-model_name',dest='model_name', default='default')
@@ -71,7 +72,7 @@ def main():
 	if params.mode=="prepro":
 		#---------------- preprocessing
 		print "="*100
-		prepro = Prepro()
+		prepro = Prepro(params=params, task=params.task)
 		# create jsons. create splits. learn vocab. dump all relevant files
 		prepro.preproData()
 		# Sanity checks..
